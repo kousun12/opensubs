@@ -1,0 +1,6 @@
+{
+  "license": "MIT",
+  "devDependencies": {
+    "subtitler": "^2.7.0"
+  }
+}

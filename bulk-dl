@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+
+def checks
+  check = system 'yarn check > /dev/null'
+  unless check
+    `yarn > /dev/null`
+  end
+end
+
+def bulk_dl
+  failures = []
+  File.readlines('./movies.txt').each do |line|
+    formatted_title = line.strip.gsub(' ', '.')
+    dest = "srts/#{formatted_title}.srt"
+    if Dir[dest].first
+      puts "✅  #{formatted_title}"
+    else
+      puts "⬇️  #{formatted_title}"
+      dl = system("./node_modules/subtitler/bin/subtitler.bin.js '#{line}' --lang eng -n 1 --download > /dev/null")
+      srt = Dir['*.srt'].first
+      if dl && srt
+        File.rename(srt, dest)
+      else
+        failures.push(line)
+      end
+      left = Dir['*.srt']
+      unless left.empty?
+        puts "failed to move #{left}"
+        left.each { |f| File.delete(f) }
+      end
+    end
+  end
+  unless failures.empty?
+    puts "\n\n❌  failures:\n#{failures.join("\n")}"
+  end
+end
+
+def main
+  checks
+  bulk_dl
+end
+
+main
+
